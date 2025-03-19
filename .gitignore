@@ -5,3 +5,5 @@
 .netlify
 
 public/data/log/*
+
+public/data/*
