@@ -1,32 +1,80 @@
-async function getblockList() {
-    const areablockResponse = await fetch('/data/areablock.json');
-    const areablock = await areablockResponse.json();
-    return areablock;
+async function getRegionAndPrefecture() {
+    const regionResponse = await fetch('/data/m_region.json');
+    const prefectureResponse = await fetch('/data/m_prefecture.json');
+  
+    const regions = await regionResponse.json();
+    const prefectures = await prefectureResponse.json();
+  
+    return { regions, prefectures };
   }
-
-  function generateMenu(areablock) {
-    const container = document.getElementById('container'); // コンテナの要素を取得
-    areablock.forEach(area => {
-        // リストアイテムを作成
-        const linkElement = document.createElement('a');
-        linkElement.href = `./map?block=${area.block_key}`;
-        linkElement.classList.add('list-group-item', 'list-group-item-action');
-        linkElement.textContent = area.block_name;
-
-        // コンテナに追加
-        container.appendChild(linkElement);
+  
+  function generateAccordion(regions, prefectures) {
+    const container = document.getElementById('container');
+  
+    const accordion = document.createElement('div');
+    accordion.id = 'accordionRegions';
+    accordion.classList.add('accordion');
+    container.appendChild(accordion);
+  
+    regions.forEach((region, index) => {
+      const regionId = `region-${index}`;
+  
+      // アコーディオンアイテム
+      const accordionItem = document.createElement('div');
+      accordionItem.classList.add('accordion-item');
+  
+      // ヘッダー
+      const header = document.createElement('h2');
+      header.classList.add('accordion-header');
+      header.id = `heading-${regionId}`;
+  
+      const button = document.createElement('button');
+      button.classList.add('accordion-button', 'collapsed');
+      button.setAttribute('type', 'button');
+      button.setAttribute('data-bs-toggle', 'collapse');
+      button.setAttribute('data-bs-target', `#collapse-${regionId}`);
+      button.setAttribute('aria-expanded', 'false');
+      button.setAttribute('aria-controls', `collapse-${regionId}`);
+      button.textContent = region.region_name;
+  
+      header.appendChild(button);
+  
+      // 折りたたみ部分
+      const collapseDiv = document.createElement('div');
+      collapseDiv.id = `collapse-${regionId}`;
+      collapseDiv.classList.add('accordion-collapse', 'collapse');
+      collapseDiv.setAttribute('aria-labelledby', `heading-${regionId}`);
+      collapseDiv.setAttribute('data-bs-parent', '#accordionRegions');
+  
+      const body = document.createElement('div');
+      body.classList.add('accordion-body', 'list-group');
+  
+      // 地方に属する都道府県をリスト化
+      const regionPrefectures = prefectures.filter(p => p.region_id === region.m_region_id);
+      regionPrefectures.forEach(pref => {
+        const link = document.createElement('a');
+        link.href = `./map?prefecture=${pref.m_prefecture_id}`;
+        link.classList.add('list-group-item', 'list-group-item-action');
+        link.textContent = pref.prefecture_name;
+        body.appendChild(link);
+      });
+  
+      collapseDiv.appendChild(body);
+      accordionItem.appendChild(header);
+      accordionItem.appendChild(collapseDiv);
+      accordion.appendChild(accordionItem);
     });
-}
-
-// ページがロードされた後に非同期でデータを取得し、メニューを生成
-async function init() {
+  }
+  
+  // 初期化
+  async function init() {
     try {
-        const areablock = await getblockList(); // データを取得
-        generateMenu(areablock); // 取得したデータを基にメニューを生成
+      const { regions, prefectures } = await getRegionAndPrefecture();
+      generateAccordion(regions, prefectures);
     } catch (error) {
-        console.error('Error fetching the data:', error); // エラーハンドリング
+      console.error('Error fetching data:', error);
     }
-}
-
-// ページロード時にinit関数を呼び出す
-init();
+  }
+  
+  init();
+  

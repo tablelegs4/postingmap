@@ -1,9 +1,11 @@
 .DS_Store
 .env
 
+# 個別データ
+public/data/log/*
+public/data/*
 # Local Netlify folder
 .netlify
 
-public/data/log/*
-
-public/data/*
+# 環境ファイル API Keyなど
+.env

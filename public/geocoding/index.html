@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>GeoJSON Polygon Center Calculation</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-ajax/dist/leaflet.ajax.min.js"></script> <!-- GeoJSONの読み込み -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
+
+  </head>
+  <body>
+    <script>
+      // スプレッドシートから geoJsonData を取得
+      function fetchGeoJsonData() {
+        google.script.run.withSuccessHandler(function(geoJsonData) {
+          console.log('GeoJSONデータ: ', geoJsonData);  // サーバーサイドからのレスポンスをログに出力
+          processGeoJsonData(geoJsonData);
+        }).withFailureHandler(function(error) {
+          console.error('エラーが発生しました: ', error);  // エラーがあればコンソールに表示
+        }).getGeoJsonDataFromSheet();  // サーバーサイド関数を呼び出す
+      }
+
+      // GeoJSONデータを処理して中心地を計算
+      function processGeoJsonData(geoJsonData) {
+        var results = [];
+
+        // geoJsonData から GeoJSON URL を取得して処理
+        for (var placeName in geoJsonData) {
+          var geoJsonUrl = geoJsonData[placeName];
+          
+          fetch(geoJsonUrl)
+            .then(response => response.json())
+            .then(data => {
+              // Leaflet でポリゴンを作成
+              var polygon = L.geoJSON(data);
+              var bounds = polygon.getBounds();
+              var center = bounds.getCenter();
+
+              // 結果を保存
+              results.push(`${placeName}, ${center.lat}, ${center.lng}`);
+
+              // 結果が揃ったらスプレッドシートに送信
+              if (results.length === Object.keys(geoJsonData).length) {
+                sendResultsToGAS(results);
+              }
+            })
+            .catch(error => {
+              console.error('GeoJSONロードエラー: ', error);  // エラー処理
+            });
+        }
+      }
+
+      // GASに結果を送信
+      function sendResultsToGAS(results) {
+        google.script.run.withSuccessHandler(function(response) {
+          console.log("結果がスプレッドシートに保存されました");
+        }).saveToSheet(results);
+      }
+
+      // ページが読み込まれたら GeoJSON データを取得
+      fetchGeoJsonData();
+    </script>
+  </body>
+</html>

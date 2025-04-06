@@ -1,5 +1,5 @@
 // Leaflet.jsで地図オブジェクトを作成し、初期表示位置とズームレベルを設定
-const map = L.map("map").setView([35.669400214188606, 139.48343915372877], 11);
+const map = L.map("map").setView([35.858791, 139.648831], 11);
 
 // OpenStreetMapのタイルを地図に追加（背景地図）
 const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -91,7 +91,7 @@ Promise.all([getAreaList(), getProgress(), getProgressCountdown()]).then(functio
   // 各エリアごとにGeoJSONを取得＆地図に追加
   for (let [key, areaInfo] of Object.entries(areaList)) {
     console.log(areaInfo['area_name']);
-    fetch(`https://uedayou.net/loa/東京都${areaInfo['area_name']}.geojson`)
+    fetch(`https://uedayou.net/loa/埼玉県${areaInfo['area_name']}.geojson`)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`Failed to fetch geojson for ${areaInfo['area_name']}`);
